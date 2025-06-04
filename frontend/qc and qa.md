@@ -210,58 +210,69 @@ Here's a breakdown of the necessary front-end details, categorized by the QC pro
 
   - ## IV. Supporting & Administrative QC Interfaces
 
-User & Training Management:
+    - ### User & Training Management:
 
-Views/Components:
-User Profile View (QC Focus): (UsersController)
-Display user's role, UserGroup memberships, training records.
-Training Record Management: (TrainingRecordsController)
-Form to create/update TrainingRecord (link User, Document/TrainableItem, completion date, trainer).
-List training records by User or by Document/TrainableItem.
-Backend Interaction: UsersController, TrainingRecordsController, DocumentsController.
-Equipment (Machine) Management:
+        - ### Views/Components:
+          - ####  User Profile View (QC Focus): (UsersController)
+            - Display user's role, UserGroup memberships, training records.
+            - Training Record Management: (TrainingRecordsController)
+            - Form to create/update TrainingRecord (link User, Document/TrainableItem, completion date, trainer).
+            - List training records by User or by Document/TrainableItem.
 
-Views/Components:
-Machine List/Detail/Form: (MachinesController)
-Include fields for qualification status, next calibration date.
-Link to calibration/maintenance Documents.
-Maintenance Schedule View:
-View/manage MaintenanceSchedule for machines.
-Backend Interaction: MachinesController, DocumentsController.
-General Settings & Configuration:
+        - ### Backend Interaction- Backend Interaction: UsersController, TrainingRecordsController, DocumentsController.
 
-Views/Components:
-UI for managing QualityParameters (if standalone).
-UI for managing Units (UnitsController).
-UI for managing Labels and LabelValue presets (LabelsController).
-UI for UserGroup management, especially for approval groups (UserGroupsController).
-UI for Job (role) definitions (JobsController).
-UI for Manufacturer management (ManufacturersController).
-UI for GeneratedNumber configuration (if admins can set prefixes/formats).
-QC Dashboard:
+    - ### Equipment (Machine) Management:
 
-Views/Components:
-Widgets displaying:
-Documents pending approval/acknowledgement.
-Overdue CAPAs or Deviations.
-Materials pending QC testing.
-Recent OOS/OOT results.
-Upcoming equipment calibrations.
-Open Change Requests.
-Backend Interaction: Aggregates data from multiple services.
-Material Request Interface (if QC is involved in approval/dispensing):
+        - ### Views/Components:
+          - ####  Machine List/Detail/Form: (MachinesController)
+            - Include fields for qualification status, next calibration date.
+            - Link to calibration/maintenance Documents.
+          - ####  Calibration/Maintenance Schedule View:
+            - View/manage MaintenanceSchedule for machines.
 
-Views/Components:
-Material Request List/Detail/Form: (MaterialRequestsController)
-Interface for QC to review/approve requests or log dispensed quantities if applicable.
-Backend Interaction: MaterialRequestsController.
-Key Front-End Considerations:
+        - ### Backend Interactio- Backend Interaction: MachinesController, DocumentsController.
 
-Role-Based Access Control (RBAC): The UI must dynamically show/hide elements and enable/disable actions based on the logged-in user's UserType and UserGroup memberships.
-Responsiveness: Ensure usability across different devices if required.
-User Experience (UX): Intuitive navigation, clear forms, helpful error messages.
-State Management: Choose a suitable state management library (e.g., Redux, Zustand, Vuex, NgRx) for complex data flows.
-API Integration: Efficiently call the backend APIs and handle responses (loading states, errors).
-Notifications: A dedicated area or toast messages to display Notifications from the backend.
-Search and Filtering: Implement robust client-side or server-side assisted search/filtering for all list views.
+    - ### General Settings & Configuration:
+
+        - ### Views/Components:
+          - UI for managing QualityParameters (if standalone).
+          - UI for managing Units (UnitsController).
+          - UI for managing Labels and LabelValue presets (LabelsController).
+          - UI for UserGroup management, especially for approval groups (UserGroupsController).
+          - UI for Job (role) definitions (JobsController).
+          - UI for Manufacturer management (ManufacturersController).
+          - UI for Supplier management (SuppliersController).
+          - UI for GeneratedNumber configuration (if admins can set prefixes/formats).
+
+    - ### QC Dashboard:
+
+        - ### Views/Components:
+          Widgets displaying:
+            - Documents pending approval/acknowledgement.
+            - Overdue CAPAs or Deviations.
+            - Materials pending QC testing.
+            - Recent OOS/OOT results.
+            - Upcoming equipment calibrations.
+            - Open Change Requests.
+
+        - ### Backend Interaction: Aggregates data from multiple services.
+
+    - ### Material Request Interface (if QC is involved in approval/dispensing):
+
+        - ### Views/Components:
+          - Material Request List/Detail/Form: (MaterialRequestsController)
+          - Interface for QC to review/approve requests or log dispensed quantities if applicable.
+
+    - ### Backend Interaction: MaterialRequestsController.
+
+- ## V.Key Front-End Considerations:
+
+  - Role-Based Access Control (RBAC): The UI must dynamically show/hide elements and enable/disable actions based on the logged-in user's UserType and UserGroup memberships.
+  - Responsiveness: Ensure usability across different devices if required.
+  - User Experience (UX): Intuitive navigation, clear forms, helpful error messages.
+  - State Management: Choose a suitable state management library (e.g., NgRx) for complex data flows.
+  - API Integration: Efficiently call the backend APIs and handle responses (loading states, errors).
+  - Notifications: A dedicated area or toast messages to display Notifications from the backend.
+  - Search and Filtering: Implement robust client-side or server-side assisted search/filtering for all list views.
+
 This list provides a comprehensive starting point for the front-end development needed to support your pharmaceutical QC system. Each item would translate into specific components, pages, and user flows
