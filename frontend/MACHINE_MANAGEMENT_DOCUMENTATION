@@ -1,0 +1,305 @@
+# Machine Management System Documentation
+
+## Overview
+The Machine Management System provides comprehensive tracking and management of manufacturing equipment, including maintenance workflows, work orders, checklists, and operational monitoring.
+
+## Core Entities
+
+### 1. Machine Entity
+**Primary Entity**: `Models.Entities.Machine`
+
+**Key Properties:**
+- Basic Info: Name, Model, Capacity, PowerRating
+- Dates: ManufactureDate, PurchaseDate, InstallationDate
+- Status: Status (Active/Inactive), StatusChangedDate, StatusReason
+- Relationships: Manufacturer, Room, Workstation, Department, Manager
+- Categorization: Sector, Category, EquipmentType
+- Collections: ProcessTemplates, Processes, Specifications, Files
+
+**Relationships:**
+```
+Machine
+├── Manufacturer (Many-to-One)
+├── Room (Many-to-One)
+├── Workstation (Many-to-One)
+├── Department (Many-to-One)
+├── Manager (User - Many-to-One)
+├── MaintenanceSchedule (One-to-One)
+├── ProcessTemplates (One-to-Many)
+├── Processes (One-to-Many)
+├── MachineSpecifications (One-to-Many)
+├── MaintenanceWorkOrders (One-to-Many)
+├── MaintenanceChecklists (One-to-Many)
+├── EquipmentTasks (One-to-Many)
+├── EquipmentCriticalityAssessments (One-to-Many)
+└── Files (One-to-Many)
+```
+
+## Maintenance Management
+
+### 2. MaintenanceWorkOrder System
+**Entity**: `Models.Entities.MaintenanceWorkOrder`
+
+**Purpose**: Manages individual maintenance tasks and repairs
+
+**Key Properties:**
+- Identification: WorkOrderNumber, Title, Description
+- Classification: Priority, Status, Type
+- Scheduling: ScheduledDate, CompletedDate, EstimatedHours, ActualHours
+- Assignment: AssignedTo, CreatedBy, CompletedBy, ApprovedBy
+- Cost Tracking: Parts, TotalCost
+- Documentation: Documents, CompletionNotes
+
+**Workflow States:**
+```
+Requested → Scheduled → InProgress → Completed
+     ↓           ↓           ↓
+  Cancelled   OnHold    Failed
+```
+
+**API Endpoints:**
+- `POST /MaintenanceWorkOrders` - Create work order
+- `GET /MaintenanceWorkOrders/{id}` - Get work order details
+- `GET /MaintenanceWorkOrders` - List work orders
+- `PUT /MaintenanceWorkOrders/{id}` - Update work order
+- `DELETE /MaintenanceWorkOrders/{id}` - Delete work order
+- `GET /MaintenanceWorkOrders/{id}/parts` - Get work order parts
+- `POST /MaintenanceWorkOrders/{id}/parts` - Add part to work order
+
+### 3. MaintenanceChecklist System
+**Entities**: 
+- `MaintenanceChecklist` - Template for routine inspections
+- `MaintenanceChecklistItem` - Individual checklist tasks
+- `MaintenanceExecution` - Scheduled checklist execution
+- `MaintenanceExecutionItem` - Individual task completion
+
+**Purpose**: Manages routine maintenance inspections and preventive tasks
+
+**Checklist Flow:**
+```
+MaintenanceChecklist (Template)
+├── MaintenanceChecklistItem (Tasks)
+└── MaintenanceExecution (Scheduled)
+    └── MaintenanceExecutionItem (Task Results)
+```
+
+**API Endpoints:**
+- `POST /maintenance/checklists` - Create checklist template
+- `GET /maintenance/machines/{machineId}/checklists` - Get machine checklists
+- `POST /maintenance/executions` - Schedule checklist execution
+- `PUT /maintenance/executions/{id}/complete` - Complete execution
+- `GET /maintenance/executions/pending` - Get pending tasks
+- `GET /maintenance/executions/overdue` - Get overdue tasks
+
+### 4. EquipmentTask System
+**Entity**: `Models.Entities.EquipmentTask`
+
+**Purpose**: Manages equipment-specific tasks and assignments
+
+**Key Features:**
+- Task assignment and tracking
+- Machine component-specific tasks
+- Document and attachment management
+- Verification and approval workflow
+
+## Operational Management
+
+### 5. Process Integration
+**Entities**: `Process`, `ProcessTemplate`, `ProcessGroup`
+
+**Machine-Process Relationship:**
+```
+Machine
+├── ProcessTemplates (Templates for processes)
+└── Processes (Active production processes)
+    ├── Materials (Input materials)
+    ├── Outputs (Produced items)
+    └── QualityChecks (Quality control)
+```
+
+### 6. Equipment Criticality Assessment
+**Entity**: `EquipmentCriticalityAssessment`
+
+**Purpose**: Evaluates equipment importance and maintenance priority
+
+**Assessment Factors:**
+- Safety impact
+- Production impact
+- Regulatory requirements
+- Maintenance complexity
+- Replacement cost
+
+## Data Flow Diagrams
+
+### Maintenance Work Order Flow
+```
+User Request → Work Order Creation → Assignment → Execution → Completion
+     ↓                ↓                ↓           ↓           ↓
+  Approval       Parts Ordering    Progress     Quality      Closure
+                                  Tracking     Verification
+```
+
+### Preventive Maintenance Flow
+```
+Checklist Template → Schedule Execution → Task Assignment → Completion → Review
+        ↓                    ↓                  ↓              ↓         ↓
+   Item Definition      Due Date Alert    Progress Track   Results    Analysis
+```
+
+### Equipment Lifecycle
+```
+Installation → Commissioning → Operation → Maintenance → Decommission
+     ↓              ↓             ↓           ↓              ↓
+Documentation   Qualification   Monitoring   Work Orders   Disposal
+```
+
+## Status Management
+
+### Machine Status Types
+```csharp
+public enum MachineStatus
+{
+    Active,
+    Inactive,
+    UnderMaintenance,
+    OutOfService,
+    Decommissioned
+}
+```
+
+### Maintenance Status Types
+```csharp
+public enum MaintenanceStatus
+{
+    Requested,
+    Scheduled,
+    InProgress,
+    OnHold,
+    Completed,
+    Cancelled,
+    Approved,
+    Rejected,
+    Closed
+}
+```
+
+### Maintenance Types
+```csharp
+public enum MaintenanceType
+{
+    Preventive,
+    Corrective,
+    Predictive,
+    Emergency,
+    Inspection,
+    Calibration,
+    Installation,
+    Decommissioning
+}
+```
+
+## Integration Points
+
+### 1. User Management
+- Machine managers and operators
+- Maintenance technicians
+- Quality assurance personnel
+- Approval authorities
+
+### 2. Document Management
+- Maintenance procedures
+- Equipment manuals
+- Calibration certificates
+- Work instructions
+
+### 3. Inventory Management
+- Spare parts tracking
+- Material consumption
+- Cost allocation
+
+### 4. Quality Management
+- Equipment qualification
+- Calibration schedules
+- Performance monitoring
+
+## API Usage Examples
+
+### Create Maintenance Work Order
+```http
+POST /MaintenanceWorkOrders
+{
+  "workOrderNumber": "WO-2024-001",
+  "title": "Replace Motor Bearings",
+  "description": "Scheduled bearing replacement",
+  "priority": "High",
+  "type": "Preventive",
+  "machineId": "machine-123",
+  "scheduledDate": "2024-01-15T09:00:00Z",
+  "estimatedHours": 4
+}
+```
+
+### Create Maintenance Checklist
+```http
+POST /maintenance/checklists
+{
+  "name": "Daily Equipment Check",
+  "description": "Daily inspection checklist",
+  "type": "Daily",
+  "frequencyDays": 1,
+  "machineId": "machine-123",
+  "items": [
+    {
+      "description": "Check oil level",
+      "type": "Visual",
+      "isRequired": true,
+      "order": 1,
+      "instructions": "Verify oil level is between min/max marks"
+    }
+  ]
+}
+```
+
+### Complete Maintenance Execution
+```http
+PUT /maintenance/executions/{executionId}/complete
+{
+  "notes": "All checks completed successfully",
+  "items": [
+    {
+      "checklistItemId": "item-123",
+      "isCompleted": true,
+      "actualValue": "Normal",
+      "status": "Completed"
+    }
+  ]
+}
+```
+
+## Best Practices
+
+### 1. Work Order Management
+- Use descriptive work order numbers
+- Assign appropriate priority levels
+- Track actual vs estimated hours
+- Document completion thoroughly
+
+### 2. Preventive Maintenance
+- Create comprehensive checklists
+- Schedule regular executions
+- Monitor completion rates
+- Analyze trends for optimization
+
+### 3. Equipment Tracking
+- Maintain accurate equipment records
+- Regular status updates
+- Document all modifications
+- Track performance metrics
+
+### 4. Cost Management
+- Track parts and labor costs
+- Monitor maintenance budgets
+- Analyze cost per equipment
+- Optimize maintenance schedules
+
+This documentation provides a comprehensive overview of the machine management system, covering all major components, relationships, and workflows for effective equipment maintenance and operations management.
