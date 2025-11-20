@@ -1,0 +1,248 @@
+# Scheduled Maintenance API Documentation
+
+## Overview
+The Scheduled Maintenance API provides comprehensive functionality for scheduling, assigning, and managing calibration and preventive maintenance tasks. It includes status tracking, calendar integration, and automatic work order generation.
+
+## Key Features
+- ✅ Schedule maintenance tasks ahead of due dates
+- ✅ Assign tasks to personnel
+- ✅ Track maintenance status (Scheduled, Assigned, InProgress, Completed, etc.)
+- ✅ Calendar view for maintenance planning
+- ✅ Automatic work order creation when maintenance starts
+- ✅ Machine status updates (sets to "Maintenance" when started, "Active" when completed)
+- ✅ Recurring maintenance support
+- ✅ Overdue and upcoming maintenance tracking
+- ✅ External vendor assignment for calibration services
+
+## API Endpoints
+
+### Base URL: `/scheduled-maintenance`
+
+### 1. Create Scheduled Maintenance
+**POST** `/scheduled-maintenance`
+
+Creates a new scheduled maintenance task.
+
+**Request Body:**
+```json
+{
+  "title": "Monthly Calibration",
+  "description": "Monthly calibration of precision scale",
+  "type": "Calibration", // Preventive, Corrective, Calibration, etc.
+  "priority": "Medium", // Low, Medium, High, Critical
+  "machineId": "machine-uuid",
+  "scheduledDate": "2024-01-15T09:00:00Z",
+  "dueDate": "2024-01-15T17:00:00Z",
+  "estimatedDurationHours": 2,
+  "reminderDate": "2024-01-14T09:00:00Z",
+  "assignedToId": "user-uuid", // Optional - internal personnel
+  "externalVendorId": "vendor-uuid", // Optional - external calibration vendor
+  "isRecurring": true,
+  "recurrenceIntervalDays": 30,
+  "notes": "Use calibration weights set A"
+}
+```
+
+### 2. Update Scheduled Maintenance
+**PUT** `/scheduled-maintenance/{id}`
+
+Updates an existing scheduled maintenance task.
+
+### 3. Get Scheduled Maintenance by ID
+**GET** `/scheduled-maintenance/{id}`
+
+Retrieves a specific scheduled maintenance task.
+
+### 4. Get Maintenance by Machine
+**GET** `/scheduled-maintenance/machine/{machineId}`
+
+Retrieves all scheduled maintenance for a specific machine.
+
+### 5. Get My Assignments
+**GET** `/scheduled-maintenance/my-assignments`
+
+Retrieves all maintenance tasks assigned to the current user.
+
+### 6. Calendar View
+**POST** `/scheduled-maintenance/calendar`
+
+Retrieves maintenance tasks for calendar display with filtering options.
+
+**Request Body:**
+```json
+{
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-01-31T23:59:59Z",
+  "machineId": "machine-uuid", // Optional filter
+  "type": "Calibration", // Optional filter
+  "status": "Scheduled", // Optional filter
+  "assignedToId": "user-uuid", // Optional filter
+  "externalVendorId": "vendor-uuid" // Optional filter
+}
+```
+
+### 7. Assign Maintenance
+**POST** `/scheduled-maintenance/{id}/assign`
+
+Assigns a maintenance task to a user.
+
+**Request Body:**
+```json
+{
+  "assignedToId": "user-uuid",
+  "assignedDate": "2024-01-10T09:00:00Z", // Optional, defaults to now
+  "notes": "Please complete before end of shift"
+}
+```
+
+### 8. Start Maintenance
+**POST** `/scheduled-maintenance/{id}/start`
+
+Starts a maintenance task and updates machine status to "Maintenance".
+
+### 9. Complete Maintenance
+**POST** `/scheduled-maintenance/{id}/complete`
+
+Completes a maintenance task and updates machine status back to "Active".
+
+**Request Body:**
+```json
+{
+  "completionNotes": "Calibration completed successfully. All readings within tolerance."
+}
+```
+
+### 10. Cancel Maintenance
+**POST** `/scheduled-maintenance/{id}/cancel`
+
+Cancels a scheduled maintenance task.
+
+**Request Body:**
+```json
+{
+  "reason": "Equipment out of service"
+}
+```
+
+### 11. Get Overdue Maintenance
+**GET** `/scheduled-maintenance/overdue`
+
+Retrieves all overdue maintenance tasks.
+
+### 12. Get Upcoming Maintenance
+**GET** `/scheduled-maintenance/upcoming?daysAhead=7`
+
+Retrieves maintenance tasks due within the specified number of days (default: 7).
+
+### 13. Get Maintenance Due Today
+**GET** `/scheduled-maintenance/due-today`
+
+Retrieves all maintenance tasks scheduled for today.
+
+### 14. Create Work Order from Scheduled Maintenance
+**POST** `/scheduled-maintenance/{id}/create-work-order`
+
+Creates a work order from a scheduled maintenance task and updates the task status to "InProgress".
+
+### 15. Generate Recurring Maintenance
+**POST** `/scheduled-maintenance/generate-recurring`
+
+Generates next recurring maintenance tasks (Admin only). This can be run as a scheduled job.
+
+## Status Flow
+
+```
+Scheduled → Assigned → InProgress → Completed
+    ↓           ↓          ↓
+ Cancelled   Cancelled   OnHold → InProgress
+```
+
+## Status Descriptions
+
+- **Scheduled**: Task is created but not yet assigned
+- **Assigned**: Task has been assigned to someone
+- **NotStarted**: Task is due but not started (computed status)
+- **InProgress**: Task has been started (work order created, machine status = "Maintenance")
+- **OnHold**: Task is temporarily paused
+- **Completed**: Task has been completed (machine status = "Active")
+- **Cancelled**: Task has been cancelled
+- **Overdue**: Task is past due date (computed status)
+
+## Machine Status Integration
+
+When maintenance is started:
+- Machine status is automatically set to "Maintenance"
+- Personnel can see the machine is unavailable for production
+
+When maintenance is completed:
+- Machine status is automatically set back to "Active"
+- Machine becomes available for production again
+
+## Recurring Maintenance
+
+For recurring maintenance tasks:
+- Set `isRecurring: true` and specify `recurrenceIntervalDays`
+- When a recurring task is completed, the next occurrence is automatically scheduled
+- Use the `/generate-recurring` endpoint to create overdue recurring tasks
+
+## Calendar Integration
+
+The calendar endpoint provides filtered data perfect for rendering maintenance schedules:
+- Filter by date range, machine, type, status, or assigned user
+- Returns all necessary information for calendar display
+- Includes computed properties like `isOverdue` and `isDueSoon`
+
+## External Vendor Support
+
+For calibration maintenance that requires external vendors:
+- Set `externalVendorId` when creating or updating maintenance tasks
+- External vendors are managed through the Suppliers system
+- Tasks can be assigned to both internal personnel and external vendors
+- Vendor information is included in calendar views and reports
+- Work orders can reference external vendor details
+
+## Example Usage Workflow
+
+1. **Schedule Maintenance**: Create a calibration task for next month
+2. **Assign Vendor**: Assign to external calibration vendor or internal technician
+3. **Start Maintenance**: Personnel/vendor starts the task, creating a work order and setting machine to maintenance mode
+4. **Complete Maintenance**: Task is completed, machine returns to active status
+5. **Recurring**: If recurring, next task is automatically scheduled with same vendor assignment
+
+## Response Format
+
+All endpoints return data in the `ScheduledMaintenanceDto` format:
+
+```json
+{
+  "id": "uuid",
+  "taskNumber": "MT-202401-0001",
+  "title": "Monthly Calibration",
+  "description": "Monthly calibration of precision scale",
+  "type": "Calibration",
+  "priority": "Medium",
+  "status": "Assigned",
+  "machineId": "machine-uuid",
+  "machineName": "Precision Scale #1",
+  "machineCode": "PS-001",
+  "scheduledDate": "2024-01-15T09:00:00Z",
+  "dueDate": "2024-01-15T17:00:00Z",
+  "estimatedDurationHours": 2,
+  "assignedToId": "user-uuid",
+  "assignedToName": "John Doe",
+  "createdById": "creator-uuid",
+  "createdByName": "Jane Smith",
+  "isRecurring": true,
+  "recurrenceIntervalDays": 30,
+  "nextScheduledDate": "2024-02-15T09:00:00Z",
+  "isOverdue": false,
+  "isDueSoon": true,
+  "daysUntilDue": 3,
+  "workOrderId": "wo-uuid",
+  "workOrderNumber": "WO-202401-0001",
+  "externalVendorId": "vendor-uuid",
+  "externalVendorName": "Precision Calibration Services Inc."
+}
+```
+
+This API provides a complete solution for maintenance scheduling and management, with calendar integration and automatic status tracking.
